@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+'''
+email error
+sbabbar - 10/25/2017
+'''
+import sys, os, time
+import subprocess
+date = (time.strftime("%m_%d_%Y_%H%M"))
+hostname = os.uname()[1]
+#error_out = '/tmp/err.out'
+location =  '/tmp/'
+error = ('ErrorLog' + '.out' )
+error_out = (location + error)
+
+
+def email(file):
+   import smtplib
+   from email.MIMEMultipart import MIMEMultipart
+   from email.MIMEBase import MIMEBase
+   from email import Encoders
+   from email.mime.text import MIMEText
+
+
+   SUBJECT = (hostname + ' ' + 'cloud init run failed ' + ' ' + date)
+
+   msg = MIMEMultipart()
+   msg['Subject'] = SUBJECT
+   msg['From'] = 'donotreply@cisco.com'
+   msg['To'] = ' '.join(['mongo_sme@cisco.com','rarumuga@cisco.com'])
+
+   part = MIMEBase('application', "octet-stream")
+   #part.set_payload(open("text.txt", "rb").read())
+   #print file
+   part.set_payload(open(file, "rb").read())
+   Encoders.encode_base64(part)
+
+   #part.add_header('Content-Disposition', 'attachment; filename=report')
+   part.add_header('Content-Disposition', 'attachment', filename=error_out)
+   msg.attach(MIMEText('Error Output Attached', 'plain'))
+
+   msg.attach(part)
+
+   server = smtplib.SMTP('localhost')
+   server.sendmail('donotreply@cisco.com', ['mongo_sme@cisco.com','rarumuga@cisco.com'], msg.as_string())
+   server.quit()
+
+email(error_out)
